@@ -22,38 +22,39 @@ public class URLCollector {
         urls.addListener(observer);
     }
 
-    public void addURL(String url) {
-        urls.add(url);
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .GET()
-                .build();
+   public void addURL(String url) {
+    urls.add(url);
+    HttpClient client = HttpClient.newHttpClient();
+    HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .GET()
+            .build();
 
-        Future<String> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }).whenComplete((response, error) -> {
+    Future<String> future = CompletableFuture.supplyAsync(() -> {
+        try {
+            return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }).whenComplete((response, error) -> {
+        // El nombre del archivo es el nombre de la URL a partir de la segunda barra y con extensión .html
 
-            String fileName = url.replaceAll("[^a-zA-Z0-9.-]", "_") + ".html";
+        String fileName = url.replaceAll("[^a-zA-Z0-9.-]", "_") + ".html";
 
-            Path responseFilePath = Paths.get(fileName);
-            try {
-                Files.writeString(responseFilePath, response, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            } catch (IOException e) {
-                throw new RuntimeException("Error al guardar la respuesta en el archivo: " + responseFilePath, e);
-            }
-        });
+        Path responseFilePath = Paths.get(fileName);
+        try {
+            Files.writeString(responseFilePath, response, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            throw new RuntimeException("Error al guardar la respuesta en el archivo: " + responseFilePath, e);
+        }
+    });
 
-        while (!future.isDone()) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+    while (!future.isDone()){
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
+}
 }
